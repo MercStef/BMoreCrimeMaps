@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Baltimore Crime Analytics Dashboard</title>
+</head>
+
+<body>
+  <div id="app-container">
+    <aside id="sidebar">
+      <h2>Crime Analytics</h2>
+
+      <div id="mode-toggle" class="mode-toggle">
+        <button id="mode-heatmap" class="mode-btn active">Heatmap</button>
+        <button id="mode-choropleth" class="mode-btn">Neighborhood Choropleth</button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Visible Incidents</div>
+          <div id="stat-incidents">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Distinct Offenses</div>
+          <div id="stat-types">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Neighborhood Drill</div>
+          <div id="stat-selected">None</div>
+        </div>
+      </div>
+
+      <div class="stat-box">
+        <span id="incident-count">0</span> Incidents Loaded
+      </div>
+
+      <div id="neighborhood-message" class="stat-box hidden">
+        Neighborhood boundaries could not be loaded.
+      </div>
+      <div id="neighborhood-details" class="stat-box">
+        Select a neighborhood on the choropleth to drill into it.
+      </div>
+
+      <div class="filter-group">
+        <label>Timeframe: <span id="date-range-label">Initializing...</span></label>
+        <div id="date-slider"></div>
+      </div>
+
+      <div class="filter-group">
+        <label for="district-filter">Police District</label>
+        <select id="district-filter">
+          <option value="">All Districts</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Filter by Crime Type</label>
+        <div id="crime-filters">
+          <button class="crime-btn active" data-code="">All Offenses</button>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <canvas id="chart"></canvas>
+      </div>
+      <div class="chart-container">
+        <div class="chart-title">Incidents per Day</div>
+        <canvas id="trend-chart"></canvas>
+      </div>
+      <div class="filter-group theme-picker-container">
+        <label>Accent Color:</label>
+        <div id="theme-picker-parent" class="color-picker-trigger">
+          <div id="theme-color-preview"></div>
+          <span id="theme-color-text">#e25822</span>
+        </div>
+      </div>
+    </aside>
+
+    <main id="map-viewport">
+      <div id="map"></div>
+      <div id="spinner" class="hidden">
+        <div class="spinner-icon"></div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+
+</html>

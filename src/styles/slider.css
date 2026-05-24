@@ -1,0 +1,36 @@
+/* src/styles/slider.css */
+
+#date-range-label {
+  font-weight: bold;
+  color: var(--accent-color) !important; /* UPDATED: Dynamic text color */
+  margin-left: 5px;
+}
+
+#date-slider {
+  margin: 15px 10px 10px 10px;
+  height: 8px;
+  border: none;
+  background: #333;
+  box-shadow: none;
+}
+
+#date-slider .noUi-connect {
+  background: var(--accent-color) !important; /* UPDATED: Dynamic colored slider track bar */
+}
+
+#date-slider .noUi-handle {
+  height: 18px;
+  width: 18px;
+  top: -5px;
+  right: -9px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--accent-color) !important; /* UPDATED: Dynamic handle ring border */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+}
+
+#date-slider .noUi-handle::before,
+#date-slider .noUi-handle::after {
+  display: none !important;
+}
