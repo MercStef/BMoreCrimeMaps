@@ -19,6 +19,18 @@ async function queryArcGISUrl(base: string, params: Record<string, string>) {
   return data.features
 }
 
+async function loadLocalBackup(): Promise<any[]> {
+  try {
+    const res = await fetch('/data/crime-backup.json')
+    if (!res.ok) throw new Error(`Backup fetch failed: ${res.status}`)
+    const backup = await res.json()
+    return backup.features || []
+  } catch (err) {
+    console.warn('Local crime backup load failed:', err)
+    return []
+  }
+}
+
 // Fetch all pages from ArcGIS by paging through the results.
 
 export interface CrimeData {
@@ -77,13 +89,22 @@ export async function fetchAllCrimeData(
     homicideConditions.push(`District='${district.toUpperCase()}'`) 
   }
 
-  const [nibrsFeatures, homicideFeatures] = await Promise.all([
-    queryAllPages(BASE, nibrsConditions.join(' AND ')),
-    queryAllPages(HOMICIDES_BASE, homicideConditions.join(' AND ')).catch((err) => {
-      console.warn('Homicides endpoint configuration mismatch fallback:', err)
-      return [] as any[]
-    }),
-  ])
+  let nibrsFeatures: any[] = []
+  let homicideFeatures: any[] = []
+
+  try {
+    [nibrsFeatures, homicideFeatures] = await Promise.all([
+      queryAllPages(BASE, nibrsConditions.join(' AND ')),
+      queryAllPages(HOMICIDES_BASE, homicideConditions.join(' AND ')).catch((err) => {
+        console.warn('Homicides endpoint configuration mismatch fallback:', err)
+        return [] as any[]
+      }),
+    ])
+  } catch (err) {
+    console.warn('Live API fetch failed, falling back to local backup:', err)
+    nibrsFeatures = await loadLocalBackup()
+    homicideFeatures = []
+  }
 
   // The homicide layer can have slightly different field names, so normalize them.
 

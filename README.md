@@ -1,4 +1,4 @@
-# Baltimore Crime Analytics Dashboard
+# Baltimore Crime Analytics Heatmap
 
 A data-driven web app for visualizing crime patterns in Baltimore using heatmaps, choropleths, charts, and filters.
 
@@ -55,6 +55,17 @@ npm run build
 ## Deployment
 
 This is a static web app and can be deployed to GitHub Pages, Netlify, Vercel, or any static site host.
+
+## Local API backup
+
+A local backup of the crime API is stored at `public/data/crime-backup.json`.
+If the live ArcGIS endpoint fails, the app will automatically fall back to this file.
+
+To refresh the backup from the live API, run:
+
+```bash
+npm run backup:data
+```
 
 ### GitHub Pages
 
