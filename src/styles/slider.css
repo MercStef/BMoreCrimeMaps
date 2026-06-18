@@ -15,7 +15,9 @@
 }
 
 #date-slider .noUi-connect {
-  background: var(--accent-color) !important; /* UPDATED: Dynamic colored slider track bar */
+  background: var(
+    --accent-color
+  ) !important; /* UPDATED: Dynamic colored slider track bar */
 }
 
 #date-slider .noUi-handle {

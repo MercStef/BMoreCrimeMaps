@@ -26,21 +26,25 @@
           <div class="stat-label">Distinct Offenses</div>
           <div id="stat-types">0</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Neighborhood Drill</div>
-          <div id="stat-selected">None</div>
-        </div>
       </div>
 
       <div class="stat-box">
         <span id="incident-count">0</span> Incidents Loaded
       </div>
 
-      <div id="neighborhood-message" class="stat-box hidden">
-        Neighborhood boundaries could not be loaded.
-      </div>
-      <div id="neighborhood-details" class="stat-box">
-        Select a neighborhood on the choropleth to drill into it.
+      <div id="neighborhood-drill">
+        <div class="stat-card unique-drill-card" data-el="card" style="display:none;">
+          <div class="stat-label">Neighborhood Drill</div>
+          <div data-el="name"></div>
+        </div>
+        <div class="stat-box" data-el="details">
+          <div data-el="empty">Select a neighborhood on the choropleth to drill into it.</div>
+          <div data-el="active" style="display:none;">
+            <strong data-el="active-name"></strong><br />
+            <span data-el="count" class="drill-stat"></span> incidents
+            <span data-el="density" class="drill-density"></span>
+          </div>
+        </div>
       </div>
 
       <div class="filter-group">

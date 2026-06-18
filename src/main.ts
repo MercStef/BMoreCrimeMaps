@@ -1,198 +1,205 @@
-// src/main.ts
-import 'leaflet/dist/leaflet.css';
-import 'nouislider/dist/nouislider.css';
-import './style.css';
-import ThemeManager from './services/ThemeManager';
-import { MapManager, TimeSlider, CrimeChart, TrendChart } from './components';
-import FilterUI from './ui/FilterUI';
-import { fetchAllCrimeData } from './api/fetchCrimes';
-import { filterFeaturesByTime } from './utils/dataFilters';
-import { loadNeighborhoodBoundaries, summarizeNeighborhoods } from './services/NeighborhoodService';
+import "./base.css";
 
-// Instantiate UI Elements
-const mapManager = new MapManager('map', [39.2904, -76.6122], 12);
-const timeSlider = new TimeSlider('date-slider', 'date-range-label');
-const crimeChart = new CrimeChart('chart');
-const trendChart = new TrendChart('trend-chart');
+import { fetchAllCrimeData } from "./api/fetchCrimes";
+import { loadNeighborhoodBoundaries } from "./services/NeighborhoodService";
+import { LayerOrchestrator } from "./services/LayerOrchestrator";
+import ThemeManager from "./services/ThemeManager";
+import { MapManager, TimeSlider, CrimeChart, TrendChart} from "./components";
+import FilterUI from "./ui/FilterUI";
+import { filterFeaturesByTime, norm } from "./utils/dataFilters";
+import {enrichFeatures} from "./utils/dataFilters";
+import type { CrimeFeature } from "./api/buildCrimeData";
+// ────────────────────────────────────
+const mapManager        = new MapManager("map", [39.29, -76.61], 12);
+const orchestrator      = new LayerOrchestrator(mapManager, 'neighborhood-drill');
+const timeSlider        = new TimeSlider("date-slider", "date-range-label");
+const crimeChart        = new CrimeChart("chart");
+const trendChart        = new TrendChart("trend-chart");
 
-// Application States
-let rawFeatures: any[] = [];
-let minTime = 0, maxTime = 0;
-let selectedCode = '';
-let selectedDistrict = '';
-let districtsBuilt = false; // Separate tracking from crime buttons
-let mapMode: 'heatmap' | 'choropleth' = 'heatmap';
-let neighborhoodGeoJson: any = null;
-let selectedNeighborhoodId: string | null = null;
-let isNeighborhoodDataLoaded = false;
+// ─────────────────────────────────────────────
+// DOM REFS (with null coalescing for strict mode)
+// ─────────────────────────────────────────────
 
-let currentAccentColor = '#FFFFFF';
+const statIncidents = document.getElementById("stat-incidents") ?? null;
+const statTypes     = document.getElementById("stat-types") ?? null;
+const statLoaded    = document.getElementById("incident-count") ?? null;
 
-// Theme manager handles the color picker and updates the accent color across the UI.
-const themeManager = new ThemeManager('theme-picker-parent', 'theme-color-preview', 'theme-color-text', currentAccentColor);
-themeManager.onChange((selectedColor) => {
-  currentAccentColor = selectedColor;
-  processUI();
-});
+// ─────────────────────────────────────────────
+// APPLICATION STATE
+// ─────────────────────────────────────────────
 
-// DOM Selectors for Layout Elements
-const spinner = document.getElementById('spinner')!;
-const districtSelect = document.getElementById('district-filter') as HTMLSelectElement | null;
-const crimeFiltersContainer = document.getElementById('crime-filters');
-const heatmapModeBtn = document.getElementById('mode-heatmap');
-const choroplethModeBtn = document.getElementById('mode-choropleth');
-const statIncidents = document.getElementById('stat-incidents');
-const statTypes = document.getElementById('stat-types');
-const statSelected = document.getElementById('stat-selected');
-const neighborhoodDetails = document.getElementById('neighborhood-details');
-const neighborhoodMessage = document.getElementById('neighborhood-message');
+let rawFeatures:           CrimeFeature[]           = [];
+let minTime                                         = 0;
+let maxTime                                         = 0;
+let selectedCrimeCode                               = "";
+let selectedDistrict                                = "";
+let mapMode:               "heatmap" | "choropleth" = "heatmap";
+let selectedNeighborhoodId: string | null           = null;
+let neighborhoodGeoJson:   any                      = null;
+let currentAccentColor                              = "#3498db";
+// ─────────────────────────────────────────────
+// FILTER UI
+// ─────────────────────────────────────────────
 
-// Initialize Filter UI helper
 const filterUI = new FilterUI(
-  districtSelect,
-  crimeFiltersContainer,
-  (code) => {
-    selectedCode = code;
-    loadData(selectedCode, selectedDistrict);
-  },
-  (district) => {
-    selectedDistrict = district;
-    loadData(selectedCode, selectedDistrict);
-  }
+  document.getElementById("district-filter") as HTMLSelectElement,
+  document.getElementById("crime-filters"),
+  (code)     => { selectedCrimeCode = code;     processUI(); },
+  (district) => { selectedDistrict  = district; processUI(); },
 );
 
-heatmapModeBtn?.addEventListener('click', () => setMapMode('heatmap'));
-choroplethModeBtn?.addEventListener('click', () => setMapMode('choropleth'));
+// ─────────────────────────────────────────────
+// THEME
+// ─────────────────────────────────────────────
 
-mapManager.onMoveEnd(() => processUI());
-mapManager.onPolygonClick((feature) => {
-  if (!feature?.properties) return;
-  selectedNeighborhoodId = feature.properties.id || null;
-  neighborhoodDetails && (neighborhoodDetails.textContent = `${feature.properties.name || 'Neighborhood'}: ${feature.properties.incidentCount ?? 0} incidents, ${feature.properties.density ?? 0} / km²`);
+const themeManager = new ThemeManager(
+  "theme-picker-parent",
+  "theme-color-preview",
+  "theme-color-text",
+  currentAccentColor,
+);
+
+themeManager.onChange((color) => {
+  currentAccentColor = color;
   processUI();
 });
 
-function setMapMode(mode: 'heatmap' | 'choropleth') {
-  mapMode = mode;
-  heatmapModeBtn?.classList.toggle('active', mode === 'heatmap');
-  choroplethModeBtn?.classList.toggle('active', mode === 'choropleth');
-  if (mode === 'choropleth' && !isNeighborhoodDataLoaded) {
-    loadNeighborhoodBoundaries()
-      .then((data) => {
-        neighborhoodGeoJson = data;
-        isNeighborhoodDataLoaded = true;
-        neighborhoodMessage?.classList.add('hidden');
-        processUI();
-      })
-      .catch(() => {
-        neighborhoodMessage?.classList.remove('hidden');
-      });
-  } else {
-    processUI();
-  }
-}
+// ─────────────────────────────────────────────
+// MAP MODE TOGGLE
+// ─────────────────────────────────────────────
 
-async function loadData(code?: string, district?: string) {
-  if (spinner) spinner.classList.remove('hidden');
+const heatBtn       = document.getElementById("mode-heatmap");
+const choroplethBtn = document.getElementById("mode-choropleth");
 
-  // Load the latest crime data from the ArcGIS services.
-  const data = await fetchAllCrimeData(code, district);
-  rawFeatures = data.features;
-
-  if (minTime === 0) {
-    const dates = rawFeatures
-      .map(f => new Date(f.attributes.CrimeDateTime).getTime())
-      .filter(t => !isNaN(t))
-      .sort((a, b) => a - b);
-
-    if (dates.length > 0) {
-      const absoluteMin = dates[0];
-      const absoluteMax = dates[dates.length - 1];
-
-      const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000;
-      const rightNow = Date.now();
-      const oneMonthAgo = rightNow - thirtyDaysInMs;
-
-      const targetMin = Math.max(absoluteMin, oneMonthAgo);
-      const targetMax = absoluteMax;
-
-      minTime = targetMin;
-      maxTime = targetMax;
-
-      timeSlider.init(
-        rawFeatures, 
-        (min, max) => {
-          minTime = min;
-          maxTime = max;
-          processUI();
-        },
-        targetMin,
-        targetMax
-      );
-    }
-  }
-
-  // Build the district dropdown only once, since district boundaries are static.
-  if (!districtsBuilt) {
-    filterUI.buildDistrictOptions(data.districts, selectedDistrict);
-    districtsBuilt = true;
-  }
-
+heatBtn?.addEventListener("click", () => {
+  mapMode = "heatmap";
+  heatBtn.classList.add("active");
+  choroplethBtn?.classList.remove("active");
   processUI();
+});
 
-  if (spinner) spinner.classList.add('hidden');
-}
+choroplethBtn?.addEventListener("click", () => {
+  mapMode = "choropleth";
+  choroplethBtn.classList.add("active");
+  heatBtn?.classList.remove("active");
+  processUI();
+});
 
-function processUI() {
-  // 1. Get the incidents matching the active time frame window
-  const filteredByTime = filterFeaturesByTime(rawFeatures, minTime, maxTime);
+// ─────────────────────────────────────────────
+// MAP EVENTS
+// ─────────────────────────────────────────────
 
-  // Only keep incidents that have valid coordinates for the map.
-  const validSpatialFeatures = filteredByTime.filter(
-    f => f && f.geometry && typeof f.geometry.x === 'number' && typeof f.geometry.y === 'number'
-  );
+mapManager.onMoveEnd(processUI);
+mapManager.onZoom(processUI);
 
-  const countEl = document.getElementById('incident-count');
-  if (countEl) {
-    countEl.textContent = String(validSpatialFeatures.length);
-  }
+mapManager.onPolygonClick((feature) => {
+  selectedNeighborhoodId = feature?.properties?.id ?? null;
+  processUI();
+});
 
-  const inViewBounds = mapManager.map.getBounds();
-  const featuresInView = validSpatialFeatures.filter((f) =>
-    inViewBounds.contains([f.geometry.y, f.geometry.x])
-  );
+// ─────────────────────────────────────────────
+// DATA BOOTSTRAP
+// ─────────────────────────────────────────────
 
-  statIncidents && (statIncidents.textContent = String(featuresInView.length));
-  statTypes && (statTypes.textContent = String(new Set(featuresInView.map(f => f.attributes.Description)).size));
-  statSelected && (statSelected.textContent = selectedNeighborhoodId ? selectedNeighborhoodId : 'None');
+async function loadData(): Promise<void> {
+  try {
+    const [crimeData, neighborhoodData] = await Promise.all([
+      fetchAllCrimeData(),
+      loadNeighborhoodBoundaries().catch((err) => {
+        console.error("Failed loading neighborhood boundaries:", err);
+        return null;
+      }),
+    ]);
 
-  // 2. REBUILD CRIME BUTTONS DYNAMICALLY based on active temporal features
-  filterUI.updateDynamicCrimeFilters(filteredByTime, rawFeatures, selectedCode);
+    rawFeatures      = enrichFeatures(crimeData.features);
+    neighborhoodGeoJson = neighborhoodData;
 
-  // Build the full list of all offense descriptions in the dataset so colors stay consistent.
-  const allPossibleDescriptions = rawFeatures.map(f => f.attributes.Description || 'Incident');
+    if (statLoaded) statLoaded.textContent = String(rawFeatures.length);
 
-  // Update chart layout and daily trend analytics.
-  crimeChart.update(validSpatialFeatures, currentAccentColor, allPossibleDescriptions);
-  trendChart.update(featuresInView, currentAccentColor);
+    const distinctDistricts = Array.from(
+      new Set(
+        rawFeatures
+          .map((f) => norm(f.attributes?.New_District ?? ""))
+          .filter((d) => d && d !== "OUT OF JURISDICTION"),
+      ),
+    ).sort();
 
-  if (mapMode === 'choropleth') {
-    if (neighborhoodGeoJson) {
-      const summarized = summarizeNeighborhoods(neighborhoodGeoJson, featuresInView);
-      mapManager.renderChoropleth(summarized, selectedNeighborhoodId, currentAccentColor);
-    } else {
-      mapManager.clearChoropleth();
+    filterUI.buildDistrictOptions(distinctDistricts, selectedDistrict);
+
+    const dates = rawFeatures
+      .map((f) => f.attributes?.CrimeDateTime)
+      .filter((t) => typeof t === 'number' && Number.isFinite(t))
+      .sort((a, b) => (a as number) - (b as number));
+
+    if (dates.length === 0) {
+      console.error("No valid timestamps in data");
+      return;
     }
-    // In choropleth mode, show heatmap + individual incident circles together
-    mapManager.renderHeatmap(featuresInView, crimeChart.colorMap, currentAccentColor);
-    mapManager.renderCircles(featuresInView, crimeChart.colorMap, currentAccentColor);
-  } else {
-    // In heatmap mode, always render both heatmap and circles for visibility at all zoom levels
-    mapManager.clearChoropleth();
-    mapManager.renderHeatmap(validSpatialFeatures, crimeChart.colorMap, currentAccentColor);
-    mapManager.renderCircles(validSpatialFeatures, crimeChart.colorMap, currentAccentColor);
+
+    const monthAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    minTime = Math.max(dates[0] as number, monthAgo);
+    maxTime = dates.at(-1) as number;
+
+    timeSlider.init(rawFeatures, (min, max) => {
+      minTime = min;
+      maxTime = max;
+      processUI();
+    }, minTime, maxTime);
+
+    processUI();
+  } catch (error) {
+    console.error("Critical dashboard boot failure:", error);
   }
 }
 
-mapManager.onZoom(() => processUI());
+// ─────────────────────────────────────────────
+// RENDER PIPELINE
+// ─────────────────────────────────────────────
+
+function processUI(): void {
+  const timeFiltered = filterFeaturesByTime(rawFeatures, minTime, maxTime);
+
+  const districtFiltered = selectedDistrict
+    ? timeFiltered.filter((f) => norm(f.attributes?.New_District) === selectedDistrict)
+    : timeFiltered;
+
+  const valid = districtFiltered.filter(
+    (f) => f?.geometry?.x != null && f?.geometry?.y != null,
+  );
+
+  filterUI.updateDynamicCrimeFilters(valid, rawFeatures, selectedCrimeCode);
+
+  const activeCodes = selectedCrimeCode.split(",").map((c) => c.trim()).filter(Boolean);
+  const fullyFiltered = activeCodes.length > 0
+    ? valid.filter((f) => activeCodes.includes(String(f.attributes?.CrimeCode).trim()))
+    : valid;
+
+  const bounds   = mapManager.map.getBounds();
+  const inView   = fullyFiltered.filter((f) => bounds.contains([f.geometry.y, f.geometry.x]));
+
+  if (statIncidents) statIncidents.textContent = String(inView.length);
+  if (statTypes)     statTypes.textContent     = String(new Set(inView.map((f) => f.attributes?.Description)).size);
+
+  const uniqueDescriptions = Array.from(
+    new Set(fullyFiltered.map((f) => f.attributes?.Description).filter(Boolean)),
+  );
+
+  crimeChart.update(fullyFiltered, currentAccentColor, uniqueDescriptions);
+  trendChart.update(inView, currentAccentColor);
+
+  orchestrator.clear();
+
+  if (mapMode === "choropleth") {
+    if (!neighborhoodGeoJson) return;
+    orchestrator.renderChoropleth(neighborhoodGeoJson, inView, selectedNeighborhoodId, currentAccentColor);
+    return;
+  }
+
+  orchestrator.renderHeatmap(fullyFiltered, crimeChart.colorMap, currentAccentColor);
+}
+
+// ─────────────────────────────────────────────
+// BOOT
+// ─────────────────────────────────────────────
+
 loadData();

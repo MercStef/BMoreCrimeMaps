@@ -1,3 +1,4 @@
+// src/ui/FilterUI.ts
 export type OnSelectCode = (code: string) => void;
 export type OnDistrictChange = (district: string) => void;
 
@@ -7,104 +8,121 @@ export class FilterUI {
   private onSelectCode: OnSelectCode;
   private onDistrictChange: OnDistrictChange;
 
-  // FilterUI handles the district dropdown and the crime buttons.
-  // It keeps the DOM logic separate from the rest of the app.
   constructor(
     districtSelect: HTMLSelectElement | null,
     crimeFiltersContainer: HTMLElement | null,
     onSelectCode: OnSelectCode,
-    onDistrictChange: OnDistrictChange
+    onDistrictChange: OnDistrictChange,
   ) {
     this.districtSelect = districtSelect;
     this.crimeFiltersContainer = crimeFiltersContainer;
     this.onSelectCode = onSelectCode;
     this.onDistrictChange = onDistrictChange;
 
-    if (this.districtSelect) {
-      this.districtSelect.addEventListener('change', (e) => {
-        const value = (e.target as HTMLSelectElement).value;
-        this.onDistrictChange(value);
-      });
-    }
+    this.districtSelect?.addEventListener("change", (e) => {
+      this.onDistrictChange((e.target as HTMLSelectElement).value);
+    });
   }
 
-  // Rebuilds the district select box from the latest district list.
-  public buildDistrictOptions(districts: string[], selectedDistrict = '') {
+  public buildDistrictOptions(
+    districts: string[],
+    selectedDistrict = "",
+  ): void {
     if (!this.districtSelect) return;
+
     this.districtSelect.innerHTML = '<option value="">All Districts</option>';
+
     for (const d of districts) {
-      const option = document.createElement('option');
+      const option = document.createElement("option");
       option.value = d;
       option.textContent = d.charAt(0) + d.slice(1).toLowerCase();
       this.districtSelect.appendChild(option);
     }
+
     this.districtSelect.value = selectedDistrict;
   }
 
-  // Rebuilds the crime filter buttons for the current time window.
-  // This deduplicates offenses by description, but still retains all matching codes.
-  public updateDynamicCrimeFilters(activeFeatures: any[], rawFeatures: any[], selectedCode: string) {
+  public updateDynamicCrimeFilters(
+    activeFeatures: any[],
+    rawFeatures: any[],
+    selectedCode: string,
+  ): void {
     if (!this.crimeFiltersContainer) return;
 
     const descriptionMap = new Map<string, Set<string>>();
+
     for (const f of activeFeatures) {
-      const code = f.attributes?.CrimeCode;
-      const desc = f.attributes?.Description;
+      const code: string = f.attributes?.CrimeCode;
+      const desc: string = f.attributes?.Description;
       if (!code || !desc) continue;
-      if (!descriptionMap.has(desc)) {
-        descriptionMap.set(desc, new Set());
+
+      const bucket = descriptionMap.get(desc);
+      if (bucket) {
+        bucket.add(code);
+      } else {
+        descriptionMap.set(desc, new Set([code]));
       }
-      descriptionMap.get(desc)!.add(code);
     }
 
-    this.crimeFiltersContainer.innerHTML = '';
+    this.crimeFiltersContainer.innerHTML = "";
 
-    const allBtn = document.createElement('button');
-    allBtn.className = `crime-btn ${selectedCode === '' ? 'active' : ''}`;
-    allBtn.dataset.code = '';
-    allBtn.textContent = 'All Offenses';
-    this.attachCrimeButtonHandler(allBtn);
+    const allBtn = this.createButton("", "All Offenses", selectedCode === "");
     this.crimeFiltersContainer.appendChild(allBtn);
 
-    const sortedActiveFilters = Array.from(descriptionMap.entries()).sort((a, b) => a[0].localeCompare(b[0]));
     const activeCodeKeys = new Set<string>();
 
-    for (const [description, codeSet] of sortedActiveFilters) {
-      const codes = Array.from(codeSet).sort();
-      const codeKey = codes.join(',');
-      activeCodeKeys.add(codeKey);
+    const sorted = [...descriptionMap.entries()].sort((a, b) =>
+      a[0].localeCompare(b[0]),
+    );
 
-      const btn = document.createElement('button');
-      btn.className = `crime-btn ${selectedCode === codeKey ? 'active' : ''}`;
-      btn.dataset.code = codeKey;
-      btn.textContent = description;
-      this.attachCrimeButtonHandler(btn);
+    for (const [description, codeSet] of sorted) {
+      const codeKey = [...codeSet].sort().join(",");
+      activeCodeKeys.add(codeKey);
+      const btn = this.createButton(
+        codeKey,
+        description,
+        selectedCode === codeKey,
+      );
       this.crimeFiltersContainer.appendChild(btn);
     }
 
-    if (selectedCode !== '' && !activeCodeKeys.has(selectedCode)) {
-      const selectedCodes = selectedCode.split(',').map((item) => item.trim()).filter(Boolean);
-      const missingFeature = rawFeatures.find((f: any) => selectedCodes.includes(f.attributes?.CrimeCode));
-      const label = missingFeature ? missingFeature.attributes.Description : 'Selected Offense';
-      const ghostBtn = document.createElement('button');
-      ghostBtn.className = 'crime-btn active';
-      ghostBtn.dataset.code = selectedCode;
-      ghostBtn.textContent = `${label} (0)`;
-      this.attachCrimeButtonHandler(ghostBtn);
+    // Ghost button — keeps the active filter visible even when it drops out of view
+    if (selectedCode !== "" && !activeCodeKeys.has(selectedCode)) {
+      const selectedCodes = selectedCode
+        .split(",")
+        .map((c) => c.trim())
+        .filter(Boolean);
+      const match = rawFeatures.find((f) =>
+        selectedCodes.includes(f.attributes?.CrimeCode),
+      );
+      const label = match?.attributes?.Description ?? "Selected Offense";
+      const ghostBtn = this.createButton(selectedCode, `${label} (0)`, true);
       this.crimeFiltersContainer.appendChild(ghostBtn);
     }
   }
 
-  private attachCrimeButtonHandler(btn: HTMLButtonElement) {
-    btn.addEventListener('click', () => {
-      const code = btn.dataset.code || '';
-      // Toggle active classes so the selected filter looks obvious.
-      document.querySelectorAll('.crime-btn').forEach(b => {
-        const el = b as HTMLElement;
-        el.classList.toggle('active', (el as HTMLElement).dataset.code === code);
-      });
+  private createButton(
+    code: string,
+    label: string,
+    active: boolean,
+  ): HTMLButtonElement {
+    const btn = document.createElement("button");
+    btn.className = `crime-btn${active ? " active" : ""}`;
+    btn.dataset.code = code;
+    btn.textContent = label;
+
+    btn.addEventListener("click", () => {
+      // Scoped to container — avoids walking the full document DOM
+      this.crimeFiltersContainer
+        ?.querySelectorAll<HTMLElement>(".crime-btn")
+        .forEach((el) =>
+          el.classList.toggle("active", el.dataset.code === code),
+        );
+
       this.onSelectCode(code);
     });
+
+    return btn;
   }
 }
 

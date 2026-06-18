@@ -1,60 +1,75 @@
-import Picker from 'vanilla-picker';
+import Picker from "vanilla-picker";
 
 export type ThemeChangeCallback = (hex: string) => void;
 
-// ThemeManager is responsible for wiring up the color picker
-// and keeping the current accent color in sync with the page.
 export class ThemeManager {
   private currentColor: string;
   private picker: any | null = null;
+  private _onChange: ThemeChangeCallback | null = null; // declared with the other fields
 
   constructor(
     parentElementId: string,
     previewSquareId?: string,
     previewTextId?: string,
-    initialColor = '#FFFFFF'
+    initialColor = "#FFFFFF",
+    cssVariable = "--accent-color", // caller decides which CSS var to drive
   ) {
     this.currentColor = initialColor;
 
     const parent = document.getElementById(parentElementId);
-    const previewSquare = previewSquareId ? document.getElementById(previewSquareId) : null;
-    const previewText = previewTextId ? document.getElementById(previewTextId) : null;
+    const previewSquare = previewSquareId
+      ? document.getElementById(previewSquareId)
+      : null;
+    const previewText = previewTextId
+      ? document.getElementById(previewTextId)
+      : null;
 
-    if (!parent) return;
+    if (!parent) {
+      console.warn(`ThemeManager: Parent element not found: #${parentElementId}. Theme picker will not initialize, but CSS variable will be set.`);
+      // Still apply the default color to CSS
+      document.documentElement.style.setProperty(cssVariable, initialColor);
+      return;
+    }
 
-    // Initialize the preview UI with the initial color
-    if (previewSquare) previewSquare.style.backgroundColor = this.currentColor;
-    if (previewText) previewText.textContent = this.currentColor.toUpperCase();
+    this.syncPreview(
+      previewSquare,
+      previewText,
+      this.currentColor,
+      cssVariable,
+    );
 
-    // Only initialize the picker if the target container exists.
     this.picker = new Picker({
       parent,
-      popup: 'bottom',
+      popup: "bottom",
       color: this.currentColor,
       alpha: false,
       editor: true,
     });
 
     this.picker.onChange = (color: any) => {
-      const selectedColor = color.hex.substring(0, 7);
-      this.currentColor = selectedColor;
-      document.documentElement.style.setProperty('--accent-color', selectedColor);
-      if (previewSquare) previewSquare.style.backgroundColor = selectedColor;
-      if (previewText) previewText.textContent = selectedColor.toUpperCase();
-      // Notify the app when the selected theme color changes.
-      if (this._onChange) this._onChange(this.currentColor);
+      const hex = color.hex.substring(0, 7);
+      this.currentColor = hex;
+      this.syncPreview(previewSquare, previewText, hex, cssVariable);
+      this._onChange?.(hex);
     };
   }
 
-  private _onChange: ThemeChangeCallback | null = null;
+  private syncPreview(
+    square: HTMLElement | null,
+    text: HTMLElement | null,
+    hex: string,
+    cssVariable: string,
+  ): void {
+    document.documentElement.style.setProperty(cssVariable, hex);
+    if (square) square.style.backgroundColor = hex;
+    if (text) text.textContent = hex.toUpperCase();
+  }
 
-  // Register a callback to run when the selected theme color changes.
-  public onChange(cb: ThemeChangeCallback) {
+  public onChange(cb: ThemeChangeCallback): void {
     this._onChange = cb;
   }
 
-  // Read the currently selected accent color.
-  public getColor() {
+  public getColor(): string {
     return this.currentColor;
   }
 }

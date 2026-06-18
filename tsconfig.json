@@ -3,8 +3,15 @@
     "target": "es2023",
     "module": "esnext",
     "lib": ["ES2023", "DOM"],
-    "types": ["vite/client"],
+    "types": ["vite/client", "node"],
     "skipLibCheck": true,
+
+    /* Strict Type Checking */
+    "strict": true,
+    "strictNullChecks": true,
+    "strictPropertyInitialization": true,
+    "noImplicitAny": true,
+    "strictFunctionTypes": true,
 
     /* Bundler mode */
     "moduleResolution": "bundler",
@@ -13,11 +20,12 @@
     "moduleDetection": "force",
     "noEmit": true,
 
+
     /* Linting */
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"]
+  "include": ["src", "scripts"]
 }
