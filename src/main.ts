@@ -9,8 +9,14 @@ import FilterUI from "./ui/FilterUI";
 import { filterFeaturesByTime, norm } from "./utils/dataFilters";
 import {enrichFeatures} from "./utils/dataFilters";
 import type { CrimeFeature } from "./api/buildCrimeData";
+import {
+  BALTIMORE_CENTER,
+  DEFAULT_MAP_ZOOM,
+  DEFAULT_ACCENT_COLOR,
+  MIN_DATA_LOOKBACK_MS,
+} from "./config/constants";
 // ────────────────────────────────────
-const mapManager        = new MapManager("map", [39.29, -76.61], 12);
+const mapManager        = new MapManager("map", BALTIMORE_CENTER as [number, number], DEFAULT_MAP_ZOOM);
 const orchestrator      = new LayerOrchestrator(mapManager, 'neighborhood-drill');
 const timeSlider        = new TimeSlider("date-slider", "date-range-label");
 const crimeChart        = new CrimeChart("chart");
@@ -36,7 +42,7 @@ let selectedDistrict                                = "";
 let mapMode:               "heatmap" | "choropleth" = "heatmap";
 let selectedNeighborhoodId: string | null           = null;
 let neighborhoodGeoJson:   any                      = null;
-let currentAccentColor                              = "#3498db";
+let currentAccentColor                              = DEFAULT_ACCENT_COLOR;
 // ─────────────────────────────────────────────
 // FILTER UI
 // ─────────────────────────────────────────────
@@ -56,7 +62,7 @@ const themeManager = new ThemeManager(
   "theme-picker-parent",
   "theme-color-preview",
   "theme-color-text",
-  currentAccentColor,
+  DEFAULT_ACCENT_COLOR,
 );
 
 themeManager.onChange((color) => {
@@ -136,7 +142,7 @@ async function loadData(): Promise<void> {
       return;
     }
 
-    const monthAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const monthAgo = Date.now() - MIN_DATA_LOOKBACK_MS;
     minTime = Math.max(dates[0] as number, monthAgo);
     maxTime = dates.at(-1) as number;
 

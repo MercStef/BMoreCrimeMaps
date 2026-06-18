@@ -1,5 +1,6 @@
 import noUiSlider from "nouislider";
 import { getTime} from "../utils/dataFilters";
+import { TIME_SLIDER_STEP_MS } from "../config/constants/time";
 
 export class TimeSlider {
   private sliderInstance: any = null;
@@ -33,7 +34,7 @@ export class TimeSlider {
     this.sliderInstance = noUiSlider.create(sliderEl, {
       start: [initialMin ?? min, initialMax ?? max],
       connect: true,
-      step: 24 * 60 * 60 * 1000,
+      step: TIME_SLIDER_STEP_MS,
       range: { min, max },
     });
 

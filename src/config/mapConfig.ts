@@ -1,3 +1,5 @@
+import { OTHER_CATEGORY_COLOR } from "./constants/ui";
+
 export const MAP_CONFIG = {
   tileUrl: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
   tileAttribution: "© OpenStreetMap © CARTO",
@@ -18,7 +20,7 @@ export const HEATMAP_CONFIG = {
 
   theme: {
     otherCategoryLabel: "Other",
-    otherCategoryColor: "#888888",
+    otherCategoryColor: OTHER_CATEGORY_COLOR,
     accentBrighten: 1.0,
     accentSaturate: 0.55,
   },

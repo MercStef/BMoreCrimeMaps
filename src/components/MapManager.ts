@@ -1,4 +1,5 @@
 import { MAP_CONFIG } from "../config/mapConfig";
+import { CIRCLE_PANE_ZINDEX, CHOROPLETH_PANE_ZINDEX } from "../config/constants/circles";
 import * as L from "leaflet";
 import "leaflet.heat";
 
@@ -22,8 +23,8 @@ export class MapManager {
 }
 
 private initPanes(): void {
-  this.map.createPane('circlePane').style.zIndex = '450';
-  this.map.createPane('choroplethPane').style.zIndex = '400';
+  this.map.createPane('circlePane').style.zIndex = String(CIRCLE_PANE_ZINDEX);
+  this.map.createPane('choroplethPane').style.zIndex = String(CHOROPLETH_PANE_ZINDEX);
 }
 
   public add(layer: L.Layer): void {

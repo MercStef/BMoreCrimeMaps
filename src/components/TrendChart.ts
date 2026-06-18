@@ -1,8 +1,9 @@
 import Chart from "chart.js/auto";
+import { CHART_TICK_COLOR, CHART_GRID_COLOR } from "../config/constants/ui";
 
 const CHART_STYLE = {
-  tickColor: "#ddd",
-  gridColor: "rgba(255,255,255,0.05)",
+  tickColor: CHART_TICK_COLOR,
+  gridColor: CHART_GRID_COLOR,
 } as const;
 
 export class TrendChart {

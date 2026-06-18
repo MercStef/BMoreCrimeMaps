@@ -7,6 +7,7 @@ import type {
   Polygon,
   MultiPolygon,
 } from "geojson";
+import { GEOMETRY_SIMPLIFY_TOLERANCE, MIN_NEIGHBORHOOD_AREA_SQKM } from "../config/constants/geo";
 export interface NeighborhoodProperties {
   id: string;
   name: string;
@@ -52,7 +53,7 @@ export async function loadNeighborhoodBoundaries(): Promise<NeighborhoodCollecti
     features: raw.features.map((f: any) => {
       // Simplify geometry to make point-in-polygon calculations performant
       const simplified = simplify(f, {
-        tolerance: 0.0003,
+        tolerance: GEOMETRY_SIMPLIFY_TOLERANCE,
         highQuality: false,
         mutate: true,
       });
@@ -74,7 +75,7 @@ export async function loadNeighborhoodBoundaries(): Promise<NeighborhoodCollecti
   neighborhoodIndex = neighborhoods.features.map((feature) => ({
     feature,
     bbox: bbox(feature) as [number, number, number, number],
-    sqkm: Math.max(area(feature) / 1_000_000, 0.001), // Prevent division by zero
+    sqkm: Math.max(area(feature) / 1_000_000, MIN_NEIGHBORHOOD_AREA_SQKM), // Prevent division by zero
   }));
 
   boundaryCache = neighborhoods;

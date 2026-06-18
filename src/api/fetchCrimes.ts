@@ -1,12 +1,16 @@
 import { buildCrimeDataFromFeatures, type CrimeFeature } from "./buildCrimeData";
-// The app fetches two ArcGIS feature layers: one for general NIBRS crime data,
-// and a second layer for homicide/shooting incidents.
-const BASE =
-  "https://services1.arcgis.com/UWYHeuuJISiGmgXx/arcgis/rest/services/NIBRS_GroupA_Crime_Data/FeatureServer/0/query";
-const HOMICIDES_BASE =
-  "https://services1.arcgis.com/UWYHeuuJISiGmgXx/arcgis/rest/services/Homicides_Shootings_YTD/FeatureServer/0/query";
+import {
+  DATA_HISTORY_MONTHS,
+  ARCGIS_PAGE_SIZE,
+  MAX_INPUT_LENGTH_DEFAULT,
+  MAX_INPUT_LENGTH_EXTENDED,
+  VALID_INPUT_CHARS,
+  ARCGIS_NIBRS_BASE,
+  ARCGIS_HOMICIDES_BASE,
+  LOCAL_BACKUP_PATH,
+} from "../config/constants/api";
 
-function getPastDateString(monthsAgo = 12): string {
+function getPastDateString(monthsAgo = DATA_HISTORY_MONTHS): string {
   const date = new Date();
   date.setMonth(date.getMonth() - monthsAgo);
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")} 00:00:00`;
@@ -24,7 +28,7 @@ async function queryArcGISUrl(base: string, params: Record<string, string>) {
 
 async function loadLocalBackup(): Promise<any[]> {
   try {
-    const res = await fetch("/data/crime-backup.json");
+    const res = await fetch(LOCAL_BACKUP_PATH);
     if (!res.ok) throw new Error(`Backup fetch failed: ${res.status}`);
     const backup = await res.json();
     return backup.features || [];
@@ -46,14 +50,14 @@ export interface CrimeData {
 /**
  * Input validation helper to prevent SQL injection and malformed queries.
  */
-function validateAndEscapeInput(input: string | undefined, maxLength: number = 100): string {
+function validateAndEscapeInput(input: string | undefined, maxLength: number = MAX_INPUT_LENGTH_DEFAULT): string {
   if (!input) return "";
   
   // Trim and limit length
   let sanitized = input.trim().substring(0, maxLength);
   
   // Only allow alphanumeric, spaces, hyphens, underscores
-  if (!/^[a-zA-Z0-9\s\-_,]+$/.test(sanitized)) {
+  if (!VALID_INPUT_CHARS.test(sanitized)) {
     console.warn(`Input validation warning: input contains invalid characters, filtering them: ${input}`);
     sanitized = sanitized.replace(/[^a-zA-Z0-9\s\-_,]/g, "");
   }
@@ -62,21 +66,20 @@ function validateAndEscapeInput(input: string | undefined, maxLength: number = 1
 }
 
 async function queryAllPages(base: string, where: string): Promise<CrimeFeature[]> {
-  const PAGE_SIZE = 1000;
   let offset = 0;
-  let allFeatures: any[] = [];
+  let allFeatures: CrimeFeature[] = [];
 
   while (true) {
     const features = await queryArcGISUrl(base, {
       where,
       outFields: "*",
-      resultRecordCount: String(PAGE_SIZE),
+      resultRecordCount: String(ARCGIS_PAGE_SIZE),
       resultOffset: String(offset),
       f: "json",
     });
     allFeatures = allFeatures.concat(features);
-    if (features.length < PAGE_SIZE) break;
-    offset += PAGE_SIZE;
+    if (features.length < ARCGIS_PAGE_SIZE) break;
+    offset += ARCGIS_PAGE_SIZE;
   }
   return allFeatures;
 }
@@ -87,7 +90,7 @@ export async function fetchAllCrimeData(
   crimeCode?: string,
   district?: string,
 ): Promise<CrimeData> {
-  const dateFilter = getPastDateString(12);
+  const dateFilter = getPastDateString();
 
   const nibrsConditions = [`CrimeDateTime >= DATE '${dateFilter}'`];
   const homicideConditions = [`Date_ >= DATE '${dateFilter}'`];
@@ -96,7 +99,7 @@ export async function fetchAllCrimeData(
   // INPUT VALIDATION & FILTERS
   // ------------------------
   if (crimeCode) {
-    const validatedInput = validateAndEscapeInput(crimeCode, 500);
+    const validatedInput = validateAndEscapeInput(crimeCode, MAX_INPUT_LENGTH_EXTENDED);
     const codeValues = validatedInput
       .split(",")
       .map((c) => c.trim())
@@ -145,8 +148,8 @@ export async function fetchAllCrimeData(
   // ======================================================
   try {
     const [nibrsFeatures, homicideFeatures] = await Promise.all([
-      queryAllPages(BASE, nibrsConditions.join(" AND ")),
-      queryAllPages(HOMICIDES_BASE, homicideConditions.join(" AND ")).catch(
+      queryAllPages(ARCGIS_NIBRS_BASE, nibrsConditions.join(" AND ")),
+      queryAllPages(ARCGIS_HOMICIDES_BASE, homicideConditions.join(" AND ")).catch(
         () => [],
       ),
     ]);

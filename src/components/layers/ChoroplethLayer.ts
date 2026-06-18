@@ -4,6 +4,7 @@ import { CHOROPLETH_CONFIG } from "../../config/mapConfig";
 import type { MapManager } from "../MapManager";
 import { buildScale } from "../../utils/colorScales";
 import type { NeighborhoodProperties } from "../../services/NeighborhoodService";
+import { CHOROPLETH_COLOR_BINS } from "../../config/constants/choropleth";
 
 export interface ChoroplethRenderProps {
   _fill?: string;
@@ -71,9 +72,8 @@ export class ChoroplethLayer {
     fillScale: ReturnType<typeof buildScale>,
     logMax: number,
   ): ChoroplethFeature[] {
-    const BINS = 7;
     const invLogMax = logMax === 0 ? 1 : 1 / logMax;
-    const binSize = 1 / BINS;
+    const binSize = 1 / CHOROPLETH_COLOR_BINS;
 
     return features.map((f) => {
       const count = Number(f.properties?.incidentCount ?? 0);

@@ -1,6 +1,14 @@
 import * as L from "leaflet";
 import { CIRCLE_CONFIG } from "../../config/mapConfig";
 import { getRimColor, type ColorMap } from "../../utils/colorScales";
+import {
+  CANVAS_RENDERER_PADDING,
+  CANVAS_RENDERER_TOLERANCE,
+  CIRCLE_RADIUS,
+  CIRCLE_FILL_OPACITY,
+  CIRCLE_BORDER_WEIGHT,
+  CIRCLE_RIM_DARKEN,
+} from "../../config/constants/circles";
 
 export interface CircleFeature {
   geometry?: { x: number; y: number };
@@ -16,13 +24,13 @@ export class CircleLayer {
   constructor(features: CircleFeature[], colorMap: ColorMap, fallback: string) {
     this.layer = L.featureGroup();
 
-    const renderer = L.canvas({ padding: 0.5, tolerance: 10, pane: 'circlePane' });
+    const renderer = L.canvas({ padding: CANVAS_RENDERER_PADDING, tolerance: CANVAS_RENDERER_TOLERANCE, pane: 'circlePane' });
 
     const {
-      radius = 5,
-      fillOpacity = 0.75,
-      weight = 1,
-      rimDarken = 1.5,
+      radius = CIRCLE_RADIUS,
+      fillOpacity = CIRCLE_FILL_OPACITY,
+      weight = CIRCLE_BORDER_WEIGHT,
+      rimDarken = CIRCLE_RIM_DARKEN,
     } = CIRCLE_CONFIG?.style ?? {};
 
     for (const f of features) {

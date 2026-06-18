@@ -1,11 +1,20 @@
 import chroma from "chroma-js";
+import {
+  RIM_DARKEN_AMOUNT,
+  SCALE_DARKEN_INTENSITY,
+  SCALE_BRIGHTEN_INTENSITY,
+  COLOR_SATURATION_MANY,
+  COLOR_SATURATION_FEW,
+  COLOR_LIGHTNESS_MANY,
+  COLOR_LIGHTNESS_FEW,
+} from "../config/constants/ui";
 
 const rimCache = new Map<string, string>();
 const gradientCache = new Map<string, Record<number, string>>();
 const scaleCache = new Map<string, chroma.Scale>();
 export type ColorMap = Record<string, string>;
 
-export function getRimColor(baseColor: string, darken = 1.5): string {
+export function getRimColor(baseColor: string, darken = RIM_DARKEN_AMOUNT): string {
   const key = `${baseColor}::${darken}`;
   if (!rimCache.has(key)) {
     rimCache.set(key, chroma(baseColor).darken(darken).hex());
@@ -18,7 +27,7 @@ export function buildScale(color: string): chroma.Scale {
   if (cached) return cached;
 
   const base = chroma(color);
-  const scale = chroma.scale([base.darken(2), base, base.brighten(1.2)]);
+  const scale = chroma.scale([base.darken(SCALE_DARKEN_INTENSITY), base, base.brighten(SCALE_BRIGHTEN_INTENSITY)]);
 
   scaleCache.set(color, scale);
   return scale;
@@ -66,8 +75,8 @@ export function buildCategoryColorMap(
     return Number.isFinite(h) ? h : 180;
   })();
 
-  const saturation = count <= 8 ? 0.78 : 0.68;
-  const lightness = count <= 8 ? 0.52 : 0.6;
+  const saturation = count <= 8 ? COLOR_SATURATION_MANY : COLOR_SATURATION_FEW;
+  const lightness = count <= 8 ? COLOR_LIGHTNESS_MANY : COLOR_LIGHTNESS_FEW;
   const hueStep = 360 / count;
 
   uniqueTypes.forEach((type, i) => {

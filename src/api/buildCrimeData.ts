@@ -1,4 +1,5 @@
 import { norm } from "../utils/dataFilters";
+import { WEB_MERCATOR_RADIUS } from "../config/constants/geo";
 import type { CrimeData } from "./fetchCrimes";
 
 /**
@@ -49,9 +50,9 @@ export function buildCrimeDataFromFeatures(features: CrimeFeature[]): CrimeData 
       let lat: number, lng: number;
 
       if (Math.abs(geo.x) > 180) {
-        lng = (geo.x / 20037508.34) * 180;
+        lng = (geo.x / WEB_MERCATOR_RADIUS) * 180;
         lat =
-          (Math.atan(Math.exp(((geo.y / 20037508.34) * 180 * Math.PI) / 180)) *
+          (Math.atan(Math.exp(((geo.y / WEB_MERCATOR_RADIUS) * 180 * Math.PI) / 180)) *
             360) /
             Math.PI -
           90;
