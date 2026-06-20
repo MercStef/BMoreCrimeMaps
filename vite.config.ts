@@ -4,7 +4,7 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   // CRITICAL for GitHub Pages (replace 'repo-name' with your actual repository name)
-  base: '/repo-name/',
+  base: '/BMoreCrimeMaps/',
   
   // plugins: [vue()], // Uncomment if using Vue
 })   
