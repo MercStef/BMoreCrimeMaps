@@ -7,7 +7,10 @@ import type {
   Polygon,
   MultiPolygon,
 } from "geojson";
-import { GEOMETRY_SIMPLIFY_TOLERANCE, MIN_NEIGHBORHOOD_AREA_SQKM } from "../config/constants/geo";
+import {
+  GEOMETRY_SIMPLIFY_TOLERANCE,
+  MIN_NEIGHBORHOOD_AREA_SQKM,
+} from "../config/constants/geo";
 export interface NeighborhoodProperties {
   id: string;
   name: string;
@@ -46,16 +49,23 @@ export async function loadNeighborhoodBoundaries(): Promise<NeighborhoodCollecti
 
   let raw: any = null;
   for (const p of candidates) {
-    const res = await fetch(p).catch((err) => ({ ok: false, status: err?.message } as any));
+    const res = await fetch(p).catch(
+      (err) => ({ ok: false, status: err?.message }) as any,
+    );
     if (res && res.ok) {
       raw = await res.json();
       break;
     }
-    console.warn(`Neighborhood geojson fetch failed for ${p}:`, res?.status || "unknown");
+    console.warn(
+      `Neighborhood geojson fetch failed for ${p}:`,
+      res?.status || "unknown",
+    );
   }
 
   if (!raw) {
-    throw new Error("Failed to load neighborhood boundaries: no candidate succeeded");
+    throw new Error(
+      "Failed to load neighborhood boundaries: no candidate succeeded",
+    );
   }
 
   const neighborhoods: NeighborhoodCollection = {

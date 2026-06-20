@@ -52,6 +52,6 @@ export default class AppState {
   // ------------------------------------------------------------------
   public setState(partial: Partial<AppState>): void {
     Object.assign(this, partial);
-    this.notifySubscribers();      // ← essential – triggers UI refresh
+    this.notifySubscribers(); // ← essential – triggers UI refresh
   }
 }

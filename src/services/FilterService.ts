@@ -1,6 +1,6 @@
 // src/services/FilterService.ts
 import { filterFeaturesByTime, norm } from "../utils/dataFilters";
-import type { CrimeFeature } from "../crimeData/build";
+import type { CrimeFeature } from "../data/transform";
 import AppState from "./AppState";
 import type { MapManager } from "../components/MapManager";
 
@@ -67,17 +67,18 @@ export default class FilterService {
     // 5️⃣ Map‑viewport filter
     const bounds = this.mapManager?.map?.getBounds?.();
     const inView = bounds
-      ? fullyFiltered.filter((f) => bounds.contains([f.geometry.y, f.geometry.x]))
+      ? fullyFiltered.filter((f) =>
+          bounds.contains([f.geometry.y, f.geometry.x]),
+        )
       : [];
 
     // 6️⃣ Statistics
     const incidentCount = inView.length;
-    const typeCount = new Set(inView.map((f) => f.attributes?.Description)).size;
+    const typeCount = new Set(inView.map((f) => f.attributes?.Description))
+      .size;
     const uniqueDescriptions = Array.from(
       new Set(
-        fullyFiltered
-          .map((f) => f.attributes?.Description)
-          .filter(Boolean),
+        fullyFiltered.map((f) => f.attributes?.Description).filter(Boolean),
       ),
     );
 

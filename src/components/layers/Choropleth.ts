@@ -21,15 +21,15 @@ export type ChoroplethCollection = FeatureCollection<
   Geometry,
   ChoroplethProperties
 >;
-import { NeighborhoodDrill } from '../NeighborhoodDrill';
-import { summarizeNeighborhoods } from '../../services/NeighborhoodService';
-import type { NeighborhoodCollection } from '../../services/NeighborhoodService';
+import { NeighborhoodDrill } from "../NeighborhoodDrill";
+import { summarizeNeighborhoods } from "../../services/NeighborhoodService";
+import type { NeighborhoodCollection } from "../../services/NeighborhoodService";
 export class ChoroplethLayer {
   public layer: L.GeoJSON;
   private abortController = new AbortController();
 
-   constructor(
-    data: NeighborhoodCollection,  // changed from ChoroplethCollection
+  constructor(
+    data: NeighborhoodCollection, // changed from ChoroplethCollection
     inView: any[],
     selectedId: string | null,
     accentColor: string,
@@ -45,7 +45,7 @@ export class ChoroplethLayer {
     this.layer = L.geoJSON(
       { ...summarized, features: enriched } as GeoJSON.GeoJsonObject,
       {
-        pane: 'choroplethPane',
+        pane: "choroplethPane",
         style: (feature) => {
           const props = feature?.properties as StyleProps | undefined;
           return this.style(props ?? {}, selectedId);
@@ -55,10 +55,12 @@ export class ChoroplethLayer {
 
     // Update drill from the summarized data
     const selectedFeature = selectedId
-      ? summarized.features.find(f => String(f.properties?.id) === String(selectedId))
+      ? summarized.features.find(
+          (f) => String(f.properties?.id) === String(selectedId),
+        )
       : null;
 
-    drill.update('choropleth', selectedFeature ?? null);
+    drill.update("choropleth", selectedFeature ?? null);
 
     mapManager.bindPolygonEvents(this.layer, this.abortController.signal);
   }
@@ -110,7 +112,7 @@ export class ChoroplethLayer {
         ? CHOROPLETH_CONFIG.border.selectedWeight
         : CHOROPLETH_CONFIG.border.defaultWeight,
       opacity: CHOROPLETH_CONFIG.border.opacity,
-      pane: 'choroplethPane',
+      pane: "choroplethPane",
     };
   }
 

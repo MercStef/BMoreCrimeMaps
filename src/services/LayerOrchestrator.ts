@@ -1,4 +1,4 @@
-import { HeatLayer } from "../components/layers/HeatMap";
+import { HeatLayer } from "../components/layers/Heat";
 import { CircleLayer } from "../components/layers/Circle";
 import { ChoroplethLayer } from "../components/layers/Choropleth";
 import { CIRCLE_CONFIG } from "../config/constants/map";
@@ -31,13 +31,17 @@ export class LayerOrchestrator {
       selectedNeighborhoodId,
       accentColor,
       this.mapManager,
-      this.drill ,
+      this.drill,
     );
     this.mapManager.add(this.choroplethLayer.layer);
   }
 
-  renderHeatmap(features: any[], colorMap: ColorMap, accentColor: string): void {
-    this.drill.update('heatmap', null);
+  renderHeatmap(
+    features: any[],
+    colorMap: ColorMap,
+    accentColor: string,
+  ): void {
+    this.drill.update("heatmap", null);
 
     // If there are no features to render, skip creating heat/circle layers
     if (!features || features.length === 0) {
@@ -68,7 +72,7 @@ export class LayerOrchestrator {
     if (this.choroplethLayer) {
       this.choroplethLayer.abort();
       this.mapManager.remove(this.choroplethLayer.layer);
-      this.drill.update('heatmap', null); // Reset drill when choropleth is removed
+      this.drill.update("heatmap", null); // Reset drill when choropleth is removed
       this.choroplethLayer = null;
     }
   }

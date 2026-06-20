@@ -1,5 +1,8 @@
 import { MAP_CONFIG } from "../config/constants/map";
-import { CIRCLE_PANE_ZINDEX, CHOROPLETH_PANE_ZINDEX } from "../config/constants/circles";
+import {
+  CIRCLE_PANE_ZINDEX,
+  CHOROPLETH_PANE_ZINDEX,
+} from "../config/constants/circles";
 import * as L from "leaflet";
 import "leaflet.heat";
 
@@ -12,20 +15,22 @@ export class MapManager {
   private zoomHandler: (() => void) | null = null;
   private moveHandler: (() => void) | null = null;
 
- constructor(id: string, center: [number, number], zoom: number) {
-  this.map = L.map(id, { preferCanvas: true }).setView(center, zoom);
+  constructor(id: string, center: [number, number], zoom: number) {
+    this.map = L.map(id, { preferCanvas: true }).setView(center, zoom);
 
-  L.tileLayer(MAP_CONFIG.tileUrl, {
-    attribution: MAP_CONFIG.tileAttribution,
-  }).addTo(this.map);
+    L.tileLayer(MAP_CONFIG.tileUrl, {
+      attribution: MAP_CONFIG.tileAttribution,
+    }).addTo(this.map);
 
-  this.initPanes();
-}
+    this.initPanes();
+  }
 
-private initPanes(): void {
-  this.map.createPane('circlePane').style.zIndex = String(CIRCLE_PANE_ZINDEX);
-  this.map.createPane('choroplethPane').style.zIndex = String(CHOROPLETH_PANE_ZINDEX);
-}
+  private initPanes(): void {
+    this.map.createPane("circlePane").style.zIndex = String(CIRCLE_PANE_ZINDEX);
+    this.map.createPane("choroplethPane").style.zIndex = String(
+      CHOROPLETH_PANE_ZINDEX,
+    );
+  }
 
   public add(layer: L.Layer): void {
     layer.addTo(this.map);

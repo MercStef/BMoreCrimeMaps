@@ -1,6 +1,10 @@
 import "./base.css";
 
-import { BALTIMORE_CENTER, DEFAULT_MAP_ZOOM, DEFAULT_ACCENT_COLOR } from "./config/constants";
+import {
+  BALTIMORE_CENTER,
+  DEFAULT_MAP_ZOOM,
+  DEFAULT_ACCENT_COLOR,
+} from "./config/constants";
 import { MapManager, TimeSlider, CrimeChart, TrendChart } from "./components";
 import FilterUI from "./ui/FilterUI";
 import ThemeManager from "./services/ThemeManager";

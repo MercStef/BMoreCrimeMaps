@@ -1,4 +1,4 @@
-import { fetchAllCrimeData } from "../crimeData/fetch";
+import { fetchAllCrimeData } from "../data/loader";
 import { loadNeighborhoodBoundaries } from "./NeighborhoodService";
 import { enrichFeatures } from "../utils/dataFilters";
 import AppState from "./AppState";
@@ -61,10 +61,15 @@ export default class DataService {
       this.state.maxTime = dates.at(-1) as number;
 
       // Initialise the time slider UI – callback updates state and notifies UIManager
-      this.timeSlider.init(this.state.rawFeatures, (min: number, max: number) => {
-        this.state.setState({ minTime: min, maxTime: max });
-        // UIManager will subscribe to state changes via a simple callback (passed in constructor)
-      }, this.state.minTime, this.state.maxTime);
+      this.timeSlider.init(
+        this.state.rawFeatures,
+        (min: number, max: number) => {
+          this.state.setState({ minTime: min, maxTime: max });
+          // UIManager will subscribe to state changes via a simple callback (passed in constructor)
+        },
+        this.state.minTime,
+        this.state.maxTime,
+      );
     } catch (error) {
       console.error("Critical dashboard boot failure:", error);
     }

@@ -25,7 +25,9 @@ export class ThemeManager {
       : null;
 
     if (!parent) {
-      console.warn(`ThemeManager: Parent element not found: #${parentElementId}. Theme picker will not initialize, but CSS variable will be set.`);
+      console.warn(
+        `ThemeManager: Parent element not found: #${parentElementId}. Theme picker will not initialize, but CSS variable will be set.`,
+      );
       // Still apply the default color to CSS
       document.documentElement.style.setProperty(cssVariable, initialColor);
       return;

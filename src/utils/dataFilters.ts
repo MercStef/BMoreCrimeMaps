@@ -65,10 +65,11 @@ export function norm(s?: string): string {
   return s?.trim().toUpperCase() ?? "";
 }
 
-
 export function formatDate(dateStr: string | number): string {
-  if (!dateStr) return 'Unknown date';
+  if (!dateStr) return "Unknown date";
   return new Date(dateStr).toLocaleDateString(undefined, {
-    month: 'short', day: 'numeric', year: 'numeric'
+    month: "short",
+    day: "numeric",
+    year: "numeric",
   });
 }

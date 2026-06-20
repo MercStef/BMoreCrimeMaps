@@ -1,9 +1,4 @@
-import {
-  MapManager,
-  TimeSlider,
-  CrimeChart,
-  TrendChart,
-} from "../components";
+import { MapManager, TimeSlider, CrimeChart, TrendChart } from "../components";
 import FilterUI from "../ui/FilterUI";
 import ThemeManager from "../services/ThemeManager";
 import FilterService from "./FilterService";
@@ -126,7 +121,11 @@ export default class UIManager {
     } = this.filterService.compute();
 
     // Update dynamic crime filters based on currently valid features
-    this.filterUI.updateDynamicCrimeFilters(valid, this.state.rawFeatures, this.state.selectedCrimeCode);
+    this.filterUI.updateDynamicCrimeFilters(
+      valid,
+      this.state.rawFeatures,
+      this.state.selectedCrimeCode,
+    );
 
     // Debugging info to help diagnose missing crime-type buttons
     // (inspect browser console for these messages)
@@ -142,7 +141,8 @@ export default class UIManager {
     }
 
     // Update statistics
-    if (this.statIncidents) this.statIncidents.textContent = String(incidentCount);
+    if (this.statIncidents)
+      this.statIncidents.textContent = String(incidentCount);
     if (this.statTypes) this.statTypes.textContent = String(typeCount);
 
     // Update charts
@@ -183,6 +183,6 @@ export default class UIManager {
     if (loadedEl) loadedEl.textContent = String(this.state.rawFeatures.length);
 
     // Ensure stats and charts render for the initial state
-    this.refresh();   // ← first render with real data
+    this.refresh(); // ← first render with real data
   }
 }

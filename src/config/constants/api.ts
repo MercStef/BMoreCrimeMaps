@@ -19,10 +19,12 @@ export const MAX_INPUT_LENGTH_EXTENDED = 500;
 export const VALID_INPUT_CHARS = /^[a-zA-Z0-9\s\-_,]+$/;
 
 /** Base URL for ArcGIS NIBRS crime data feature service */
-export const ARCGIS_NIBRS_BASE = "https://services1.arcgis.com/UWYHeuuJISiGmgXx/arcgis/rest/services/NIBRS_GroupA_Crime_Data/FeatureServer/0/query";
+export const ARCGIS_NIBRS_BASE =
+  "https://services1.arcgis.com/UWYHeuuJISiGmgXx/arcgis/rest/services/NIBRS_GroupA_Crime_Data/FeatureServer/0/query";
 
 /** Base URL for ArcGIS homicides and shootings feature service */
-export const ARCGIS_HOMICIDES_BASE = "https://services1.arcgis.com/UWYHeuuJISiGmgXx/arcgis/rest/services/Homicides_Shootings_YTD/FeatureServer/0/query";
+export const ARCGIS_HOMICIDES_BASE =
+  "https://services1.arcgis.com/UWYHeuuJISiGmgXx/arcgis/rest/services/Homicides_Shootings_YTD/FeatureServer/0/query";
 
 /** Local backup file path for crime data */
 // Use Vite base URL so paths work when the app is served from a subpath

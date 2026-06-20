@@ -14,7 +14,10 @@ const gradientCache = new Map<string, Record<number, string>>();
 const scaleCache = new Map<string, chroma.Scale>();
 export type ColorMap = Record<string, string>;
 
-export function getRimColor(baseColor: string, darken = RIM_DARKEN_AMOUNT): string {
+export function getRimColor(
+  baseColor: string,
+  darken = RIM_DARKEN_AMOUNT,
+): string {
   const key = `${baseColor}::${darken}`;
   if (!rimCache.has(key)) {
     rimCache.set(key, chroma(baseColor).darken(darken).hex());
@@ -27,7 +30,11 @@ export function buildScale(color: string): chroma.Scale {
   if (cached) return cached;
 
   const base = chroma(color);
-  const scale = chroma.scale([base.darken(SCALE_DARKEN_INTENSITY), base, base.brighten(SCALE_BRIGHTEN_INTENSITY)]);
+  const scale = chroma.scale([
+    base.darken(SCALE_DARKEN_INTENSITY),
+    base,
+    base.brighten(SCALE_BRIGHTEN_INTENSITY),
+  ]);
 
   scaleCache.set(color, scale);
   return scale;
