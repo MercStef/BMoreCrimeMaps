@@ -1,4 +1,4 @@
-import { MAP_CONFIG } from "../config/mapConfig";
+import { MAP_CONFIG } from "../config/constants/map";
 import { CIRCLE_PANE_ZINDEX, CHOROPLETH_PANE_ZINDEX } from "../config/constants/circles";
 import * as L from "leaflet";
 import "leaflet.heat";

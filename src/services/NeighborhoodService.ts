@@ -38,15 +38,25 @@ let neighborhoodIndex: IndexedNeighborhood[] = [];
 export async function loadNeighborhoodBoundaries(): Promise<NeighborhoodCollection> {
   if (boundaryCache) return boundaryCache;
 
-  const res = await fetch(
+  // Try both base-prefixed and root-relative paths to be tolerant of dev setups
+  const candidates = [
+    `${import.meta.env.BASE_URL}data/Neighborhood_Statistical_Area_(NSA)_Boundaries.geojson`,
     "/data/Neighborhood_Statistical_Area_(NSA)_Boundaries.geojson",
-  );
+  ];
 
-  if (!res.ok) {
-    throw new Error(`Failed to load neighborhood boundaries: ${res.status}`);
+  let raw: any = null;
+  for (const p of candidates) {
+    const res = await fetch(p).catch((err) => ({ ok: false, status: err?.message } as any));
+    if (res && res.ok) {
+      raw = await res.json();
+      break;
+    }
+    console.warn(`Neighborhood geojson fetch failed for ${p}:`, res?.status || "unknown");
   }
 
-  const raw = await res.json();
+  if (!raw) {
+    throw new Error("Failed to load neighborhood boundaries: no candidate succeeded");
+  }
 
   const neighborhoods: NeighborhoodCollection = {
     ...raw,

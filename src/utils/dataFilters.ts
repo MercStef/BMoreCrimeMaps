@@ -5,8 +5,17 @@
 // ----------------------------------------------------
 export function enrichFeatures(features: any[]): any[] {
   for (const f of features) {
-    const t = new Date(f.attributes?.CrimeDateTime).getTime();
+    const a = f.attributes ?? {};
+
+    // Normalize date into a numeric timestamp cached on the feature
+    const t = new Date(a.CrimeDateTime ?? a.Date_).getTime();
     f._time = Number.isFinite(t) ? t : NaN;
+
+    // Ensure a unified `CrimeCode` property exists for both sources
+    if (a.CrimeCode == null && a.CRIME_CODE != null) {
+      a.CrimeCode = String(a.CRIME_CODE);
+    }
+    f.attributes = a;
   }
   return features;
 }
@@ -54,4 +63,12 @@ export function computeChartData(
 // ----------------------------------------------------
 export function norm(s?: string): string {
   return s?.trim().toUpperCase() ?? "";
+}
+
+
+export function formatDate(dateStr: string | number): string {
+  if (!dateStr) return 'Unknown date';
+  return new Date(dateStr).toLocaleDateString(undefined, {
+    month: 'short', day: 'numeric', year: 'numeric'
+  });
 }

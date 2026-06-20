@@ -25,4 +25,5 @@ export const ARCGIS_NIBRS_BASE = "https://services1.arcgis.com/UWYHeuuJISiGmgXx/
 export const ARCGIS_HOMICIDES_BASE = "https://services1.arcgis.com/UWYHeuuJISiGmgXx/arcgis/rest/services/Homicides_Shootings_YTD/FeatureServer/0/query";
 
 /** Local backup file path for crime data */
-export const LOCAL_BACKUP_PATH = "/data/crime-backup.json";
+// Use Vite base URL so paths work when the app is served from a subpath
+export const LOCAL_BACKUP_PATH = `${import.meta.env.BASE_URL}data/crime-backup.json`;

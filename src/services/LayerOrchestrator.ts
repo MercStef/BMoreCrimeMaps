@@ -1,7 +1,7 @@
-import { HeatLayer } from "../components/layers/HeatLayer";
-import { CircleLayer } from "../components/layers/CircleLayer";
-import { ChoroplethLayer } from "../components/layers/ChoroplethLayer";
-import { CIRCLE_CONFIG } from "../config/mapConfig";
+import { HeatLayer } from "../components/layers/HeatMap";
+import { CircleLayer } from "../components/layers/Circle";
+import { ChoroplethLayer } from "../components/layers/Choropleth";
+import { CIRCLE_CONFIG } from "../config/constants/map";
 import { MapManager } from "../components/MapManager";
 import { NeighborhoodDrill } from "../components/NeighborhoodDrill";
 import type { ColorMap } from "../utils/colorScales";
@@ -38,6 +38,14 @@ export class LayerOrchestrator {
 
   renderHeatmap(features: any[], colorMap: ColorMap, accentColor: string): void {
     this.drill.update('heatmap', null);
+
+    // If there are no features to render, skip creating heat/circle layers
+    if (!features || features.length === 0) {
+      return;
+    }
+
+    // Ensure the map canvas has been sized before adding canvas-based layers
+    this.mapManager.refresh();
 
     this.heatLayer = new HeatLayer(features, accentColor);
     this.mapManager.add(this.heatLayer.layer);
