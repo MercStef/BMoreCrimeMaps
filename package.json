@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "backup:data": "node ./scripts/backupCrimeData.ts",
+    "backup:data": "tsx ./scripts/backupCrimeData.ts",
     "check-backup": "node ./scripts/checkBackup.js",
     "format": "prettier --write ."
   },
