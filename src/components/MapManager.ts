@@ -1,7 +1,7 @@
 import { MAP_CONFIG } from "../config/constants/map";
 import { CIRCLE_CONFIG } from "../config/constants/map";
-import * as L from "leaflet";
-import "leaflet.heat";
+import L from 'leaflet';
+import 'leaflet.heat';
 
 export class MapManager {
   public map: L.Map;
