@@ -1,7 +1,7 @@
-import * as L from "leaflet";
 import { HEATMAP_CONFIG } from "../../config/constants/map";
 import { getHeatGradient } from "../../utils/colorScales";
 import type { CircleFeature } from "./Circle";
+import L from "leaflet";  // default import, not namespace
 import "leaflet.heat";
 
 declare module "leaflet" {
