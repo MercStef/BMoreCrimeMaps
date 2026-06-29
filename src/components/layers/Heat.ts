@@ -2,7 +2,6 @@ import * as L from "leaflet";
 import { HEATMAP_CONFIG } from "../../config/constants/map";
 import { getHeatGradient } from "../../utils/colorScales";
 import type { CircleFeature } from "./Circle";
-import { HEAT_LOG_DENOMINATOR } from "../../config/constants/heatmap";
 import "leaflet.heat";
 
 declare module "leaflet" {
@@ -12,7 +11,9 @@ declare module "leaflet" {
   ): L.Layer;
 }
 
-const LOG1P_DENOMINATOR = Math.log1p(HEAT_LOG_DENOMINATOR);
+const LOG1P_DENOMINATOR = Math.log1p(
+  HEATMAP_CONFIG.behavior.logDenominator,
+);
 
 export class HeatLayer {
   public layer: L.Layer;
@@ -32,14 +33,18 @@ export class HeatLayer {
     features: CircleFeature[],
   ): Array<[number, number, number]> {
     const out: Array<[number, number, number]> = [];
+
     for (const f of features) {
       if (f.geometry?.x == null || f.geometry?.y == null) continue;
+
       const intensity = Math.min(
         Math.log1p(f.attributes?.Weight ?? 1) / LOG1P_DENOMINATOR,
         1,
       );
+
       out.push([f.geometry.y, f.geometry.x, intensity]);
     }
+
     return out;
   }
 }

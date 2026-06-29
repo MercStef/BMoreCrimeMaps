@@ -1,65 +1,91 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Baltimore Crime Analytics Dashboard</title>
-  </head>
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+  <title>Baltimore Crime Analytics Dashboard</title>
+</head>
 
-  <body>
-    <div id="app-container">
-      <aside id="sidebar">
-        <h2>Crime Analytics</h2>
+<body>
+  <div id="app-container">
+    <button id="sidebar-toggle" aria-label="Toggle sidebar">
+      &#9776;
+    </button>
 
+    <div id="sidebar-backdrop"></div>
+
+    <aside id="sidebar">
+      <h2>Crime Analytics</h2>
+
+      <!-- Map Mode -->
+      <section class="sidebar-section">
         <div id="mode-toggle" class="mode-toggle">
-          <button id="mode-heatmap" class="mode-btn active">Heatmap</button>
+          <button id="mode-heatmap" class="mode-btn active">
+            Heatmap
+          </button>
           <button id="mode-choropleth" class="mode-btn">
-            Neighborhood Choropleth
+            Choropleth
           </button>
         </div>
+      </section>
 
+      <!-- KPI Cards -->
+      <section class="sidebar-section">
         <div class="stats-grid">
           <div class="stat-card">
-            <div class="stat-label">Visible Incidents</div>
+            <span class="stat-label">Visible Incidents</span>
             <div id="stat-incidents">0</div>
           </div>
+
           <div class="stat-card">
-            <div class="stat-label">Distinct Offenses</div>
+            <span class="stat-label">Distinct Offenses</span>
             <div id="stat-types">0</div>
           </div>
         </div>
+      </section>
 
-        <div class="stat-box">
-          <span id="incident-count">0</span> Incidents Loaded
+      <!-- Neighborhood Drilldown -->
+      <section
+        id="neighborhood-drill"
+        class="sidebar-section neighborhood-panel"
+        style="display:none"
+      >
+        <div data-el="empty">
+          Select a neighborhood on the map.
         </div>
 
-        <div id="neighborhood-drill">
-          <div
-            class="stat-card unique-drill-card"
-            data-el="card"
-            style="display: none"
-          >
-            <div class="stat-label">Neighborhood Drill</div>
-            <div data-el="name"></div>
-          </div>
-          <div class="stat-box" data-el="details">
-            <div data-el="empty">
-              Select a neighborhood on the choropleth to drill into it.
+        <div data-el="active" style="display:none">
+          <h3 data-el="active-name"></h3>
+
+          <div class="drill-metrics">
+            <div>
+              <span data-el="count" class="drill-stat"></span>
+              incidents
             </div>
-            <div data-el="active" style="display: none">
-              <strong data-el="active-name"></strong><br />
-              <span data-el="count" class="drill-stat"></span> incidents
-              <span data-el="density" class="drill-density"></span>
-            </div>
+
+            <div
+              data-el="density"
+              class="drill-density"
+            ></div>
           </div>
         </div>
+      </section>
 
+      <!-- Filters -->
+      <section class="sidebar-section">
         <div class="filter-group">
-          <label
-            >Timeframe:
-            <span id="date-range-label">Initializing...</span></label
-          >
+          <label>
+            Timeframe:
+            <span id="date-range-label">
+              Initializing...
+            </span>
+          </label>
+
           <div id="date-slider"></div>
+
           <div class="date-inputs">
             <input
               id="date-start"
@@ -67,6 +93,7 @@
               class="date-input"
               placeholder="YYYY-MM-DD"
             />
+
             <input
               id="date-end"
               type="text"
@@ -74,54 +101,104 @@
               placeholder="YYYY-MM-DD"
             />
           </div>
+
           <div class="date-controls">
-            <button id="open-calendar">Calendar</button>
-            <label class="single-day-label"
-              ><input id="single-day-toggle" type="checkbox" /> Single
-              day</label
-            >
-            <input id="date-picker" type="text" style="display: none" />
+            <button id="open-calendar">
+              Calendar
+            </button>
+
+            <label class="single-day-label">
+              <input
+                id="single-day-toggle"
+                type="checkbox"
+              />
+              Single Day
+            </label>
+
+            <input
+              id="date-picker"
+              type="text"
+              style="display:none"
+            />
           </div>
         </div>
 
         <div class="filter-group">
-          <label for="district-filter">Police District</label>
+          <label for="district-filter">
+            Police District
+          </label>
+
           <select id="district-filter">
-            <option value="">All Districts</option>
+            <option value="">
+              All Districts
+            </option>
           </select>
         </div>
 
         <div class="filter-group">
-          <label>Filter by Crime Type</label>
+          <label>Crime Type</label>
+
           <div id="crime-filters">
-            <button class="crime-btn active" data-code="">All Offenses</button>
+            <button
+              class="crime-btn active"
+              data-code=""
+            >
+              All Offenses
+            </button>
           </div>
         </div>
+      </section>
 
+      <!-- Charts -->
+      <section class="sidebar-section">
         <div class="chart-container">
+          <div class="chart-title">
+            Crime Types
+          </div>
+
           <canvas id="chart"></canvas>
         </div>
+
         <div class="chart-container">
-          <div class="chart-title">Incidents per Day</div>
+          <div class="chart-title">
+            Incidents Per Day
+          </div>
+
           <canvas id="trend-chart"></canvas>
         </div>
-        <div class="filter-group theme-picker-container">
-          <label>Accent Color:</label>
-          <div id="theme-picker-parent" class="color-picker-trigger">
+      </section>
+
+      <!-- Theme -->
+      <section class="sidebar-section">
+        <div class="theme-picker-container">
+          <label>Accent Color</label>
+
+          <div
+            id="theme-picker-parent"
+            class="color-picker-trigger"
+          >
             <div id="theme-color-preview"></div>
-            <span id="theme-color-text">#e25822</span>
+
+            <span id="theme-color-text">
+              #e25822
+            </span>
           </div>
         </div>
-      </aside>
+      </section>
+    </aside>
 
-      <main id="map-viewport">
-        <div id="map"></div>
-        <div id="spinner" class="hidden">
-          <div class="spinner-icon"></div>
-        </div>
-      </main>
-    </div>
+    <main id="map-viewport">
+      <div id="map"></div>
 
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+      <div id="spinner" class="hidden">
+        <div class="spinner-icon"></div>
+      </div>
+    </main>
+  </div>
+
+  <script
+    type="module"
+    src="/src/main.ts"
+  ></script>
+</body>
 </html>

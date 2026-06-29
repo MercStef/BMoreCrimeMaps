@@ -2,7 +2,7 @@
 
 #date-range-label {
   font-weight: bold;
-  color: var(--accent-color) !important; /* UPDATED: Dynamic text color */
+  color: var(--accent-color) !important; /* Dynamic text color */
   margin-left: 5px;
 }
 
@@ -15,9 +15,7 @@
 }
 
 #date-slider .noUi-connect {
-  background: var(
-    --accent-color
-  ) !important; /* UPDATED: Dynamic colored slider track bar */
+  background: var(--accent-color) !important; /* Dynamic colored slider track bar */
 }
 
 #date-slider .noUi-handle {
@@ -27,7 +25,7 @@
   right: -9px;
   border-radius: 50%;
   background: #fff;
-  border: 2px solid var(--accent-color) !important; /* UPDATED: Dynamic handle ring border */
+  border: 2px solid var(--accent-color) !important; /* Dynamic handle ring border */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
   cursor: pointer;
 }

@@ -3,8 +3,6 @@ export class NeighborhoodDrill {
   private hasError = false;
 
   private root: HTMLElement;
-  private card: HTMLElement;
-  private nameEl: HTMLElement;
   private activeEl: HTMLElement;
   private emptyEl: HTMLElement;
   private countEl: HTMLElement;
@@ -19,8 +17,6 @@ export class NeighborhoodDrill {
       );
     }
     this.root = rootElement;
-    this.card = this.q("card");
-    this.nameEl = this.q("name");
     this.activeEl = this.q("active");
     this.emptyEl = this.q("empty");
     this.countEl = this.q("count");
@@ -52,7 +48,6 @@ export class NeighborhoodDrill {
     const visible = this.mode === "choropleth" && !this.hasError;
 
     this.root.style.display = visible ? "" : "none";
-    this.card.style.display = visible ? "" : "none";
 
     if (!visible) {
       return;
@@ -67,8 +62,6 @@ export class NeighborhoodDrill {
       (props?._count && props?.sqkm
         ? +(props._count / props.sqkm).toFixed(1)
         : 0);
-
-    this.nameEl.textContent = name;
 
     this.activeEl.style.display = feature ? "" : "none";
     this.emptyEl.style.display = feature ? "none" : "";

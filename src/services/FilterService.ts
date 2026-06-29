@@ -1,5 +1,5 @@
 // src/services/FilterService.ts
-import { filterFeaturesByTime, norm } from "../utils/dataFilters";
+import { filterFeaturesByTime } from "../utils/dataFilters";
 import type { CrimeFeature } from "../data/transform";
 import AppState from "./AppState";
 import type { MapManager } from "../components/MapManager";
@@ -41,11 +41,11 @@ export default class FilterService {
     const timeFiltered = filterFeaturesByTime(rawFeatures, minTime, maxTime);
 
     // 2️⃣ District filter (if any)
-    const districtFiltered = selectedDistrict
-      ? timeFiltered.filter(
-          (f) => norm(f.attributes?.New_District) === selectedDistrict,
-        )
-      : timeFiltered;
+        const districtFiltered = selectedDistrict
+          ? timeFiltered.filter(
+              (f) => f.attributes?.New_District?.toUpperCase() === selectedDistrict.toUpperCase(),
+            )
+          : timeFiltered;
 
     // 3️⃣ Remove features without valid geometry
     const valid = districtFiltered.filter(

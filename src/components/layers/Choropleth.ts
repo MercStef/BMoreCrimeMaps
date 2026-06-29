@@ -1,10 +1,18 @@
 import * as L from "leaflet";
 import type { Feature, Geometry, FeatureCollection } from "geojson";
+
 import { CHOROPLETH_CONFIG } from "../../config/constants/map";
+
 import type { MapManager } from "../MapManager";
+import { NeighborhoodDrill } from "../NeighborhoodDrill";
+
 import { buildScale } from "../../utils/colorScales";
-import type { NeighborhoodProperties } from "../../services/NeighborhoodService";
-import { CHOROPLETH_COLOR_BINS } from "../../config/constants/choropleth";
+
+import {
+  summarizeNeighborhoods,
+  type NeighborhoodProperties,
+  type NeighborhoodCollection,
+} from "../../services/NeighborhoodService";
 
 export interface ChoroplethRenderProps {
   _fill?: string;
@@ -13,23 +21,27 @@ export interface ChoroplethRenderProps {
 }
 
 export interface ChoroplethProperties
-  extends NeighborhoodProperties, ChoroplethRenderProps {}
+  extends NeighborhoodProperties,
+    ChoroplethRenderProps {}
 
 export type StyleProps = Partial<ChoroplethProperties>;
-export type ChoroplethFeature = Feature<Geometry, ChoroplethProperties>;
+
+export type ChoroplethFeature = Feature<
+  Geometry,
+  ChoroplethProperties
+>;
+
 export type ChoroplethCollection = FeatureCollection<
   Geometry,
   ChoroplethProperties
 >;
-import { NeighborhoodDrill } from "../NeighborhoodDrill";
-import { summarizeNeighborhoods } from "../../services/NeighborhoodService";
-import type { NeighborhoodCollection } from "../../services/NeighborhoodService";
+
 export class ChoroplethLayer {
   public layer: L.GeoJSON;
   private abortController = new AbortController();
 
   constructor(
-    data: NeighborhoodCollection, // changed from ChoroplethCollection
+    data: NeighborhoodCollection,
     inView: any[],
     selectedId: string | null,
     accentColor: string,
@@ -40,29 +52,42 @@ export class ChoroplethLayer {
 
     const fillScale = buildScale(accentColor);
     const logMax = this.getLogMax(summarized.features);
-    const enriched = this.precompute(summarized.features, fillScale, logMax);
+    const enriched = this.precompute(
+      summarized.features,
+      fillScale,
+      logMax,
+    );
 
     this.layer = L.geoJSON(
-      { ...summarized, features: enriched } as GeoJSON.GeoJsonObject,
+      {
+        ...summarized,
+        features: enriched,
+      } as GeoJSON.GeoJsonObject,
       {
         pane: "choroplethPane",
         style: (feature) => {
-          const props = feature?.properties as StyleProps | undefined;
+          const props = feature?.properties as
+            | StyleProps
+            | undefined;
+
           return this.style(props ?? {}, selectedId);
         },
       },
     );
 
-    // Update drill from the summarized data
     const selectedFeature = selectedId
       ? summarized.features.find(
-          (f) => String(f.properties?.id) === String(selectedId),
+          (f) =>
+            String(f.properties?.id) === String(selectedId),
         )
       : null;
 
     drill.update("choropleth", selectedFeature ?? null);
 
-    mapManager.bindPolygonEvents(this.layer, this.abortController.signal);
+    mapManager.bindPolygonEvents(
+      this.layer,
+      this.abortController.signal,
+    );
   }
 
   public abort(): void {
@@ -75,12 +100,18 @@ export class ChoroplethLayer {
     logMax: number,
   ): ChoroplethFeature[] {
     const invLogMax = logMax === 0 ? 1 : 1 / logMax;
-    const binSize = 1 / CHOROPLETH_COLOR_BINS;
+    const binSize = 1 / CHOROPLETH_CONFIG.bins;
 
     return features.map((f) => {
-      const count = Number(f.properties?.incidentCount ?? 0);
-      const normalized = Math.log1p(count) * invLogMax;
-      const stepped = Math.floor(normalized / binSize) * binSize;
+      const count = Number(
+        f.properties?.incidentCount ?? 0,
+      );
+
+      const normalized =
+        Math.log1p(count) * invLogMax;
+
+      const stepped =
+        Math.floor(normalized / binSize) * binSize;
 
       return {
         ...f,
@@ -97,8 +128,10 @@ export class ChoroplethLayer {
     });
   }
 
-  // Takes StyleProps — all fields optional, safe to receive {} from the Leaflet callback
-  private style(props: StyleProps, selectedId: string | null): L.PathOptions {
+  private style(
+    props: StyleProps,
+    selectedId: string | null,
+  ): L.PathOptions {
     const isSelected = props._id === selectedId;
     const hasValue = (props._count ?? 0) > 0;
 
@@ -107,7 +140,9 @@ export class ChoroplethLayer {
       fillOpacity: hasValue
         ? CHOROPLETH_CONFIG.fill.activeOpacity
         : CHOROPLETH_CONFIG.fill.emptyOpacity,
-      color: isSelected ? CHOROPLETH_CONFIG.border.selectedColor : "#333",
+      color: isSelected
+        ? CHOROPLETH_CONFIG.border.selectedColor
+        : "#333",
       weight: isSelected
         ? CHOROPLETH_CONFIG.border.selectedWeight
         : CHOROPLETH_CONFIG.border.defaultWeight,
@@ -116,12 +151,20 @@ export class ChoroplethLayer {
     };
   }
 
-  private getLogMax(features: ChoroplethFeature[]): number {
+  private getLogMax(
+    features: ChoroplethFeature[],
+  ): number {
     let max = 1;
+
     for (const f of features) {
-      const c = f.properties?.incidentCount ?? 0;
-      if (c > max) max = c;
+      const count =
+        f.properties?.incidentCount ?? 0;
+
+      if (count > max) {
+        max = count;
+      }
     }
+
     return Math.log1p(max);
   }
 }

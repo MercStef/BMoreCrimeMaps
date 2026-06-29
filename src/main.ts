@@ -1,12 +1,13 @@
 import "./base.css";
 
 import {
-  BALTIMORE_CENTER,
-  DEFAULT_MAP_ZOOM,
   DEFAULT_ACCENT_COLOR,
 } from "./config/constants";
+import {GEO_CONFIG} from "./config/constants/map";
+
 import { MapManager, TimeSlider, CrimeChart, TrendChart } from "./components";
 import FilterUI from "./ui/FilterUI";
+import SidebarDrawer from "./ui/SidebarDrawer";
 import ThemeManager from "./services/ThemeManager";
 import { LayerOrchestrator } from "./services/LayerOrchestrator";
 import AppState from "./services/AppState";
@@ -20,8 +21,8 @@ const state = new AppState();
 
 const mapManager = new MapManager(
   "map",
-  BALTIMORE_CENTER as [number, number],
-  DEFAULT_MAP_ZOOM,
+  GEO_CONFIG.BALTIMORE_CENTER as [number, number],
+  GEO_CONFIG.DEFAULT_MAP_ZOOM,
 );
 const orchestrator = new LayerOrchestrator(mapManager, "neighborhood-drill");
 
@@ -43,6 +44,10 @@ const themeManager = new ThemeManager(
   "theme-color-text",
   DEFAULT_ACCENT_COLOR,
 );
+
+// Mobile sidebar drawer (static markup, safe to init immediately —
+// doesn't depend on data load)
+new SidebarDrawer();
 
 // ------------------------------------------------------------------
 // 2️⃣ Wire everything together via UIManager

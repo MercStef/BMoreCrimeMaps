@@ -1,14 +1,6 @@
 import * as L from "leaflet";
-import { CIRCLE_CONFIG } from "../../config/constants/map";
+import { MAP_CONFIG, CIRCLE_CONFIG } from "../../config/constants/map";
 import { getRimColor, type ColorMap } from "../../utils/colorScales";
-import {
-  CANVAS_RENDERER_PADDING,
-  CANVAS_RENDERER_TOLERANCE,
-  CIRCLE_RADIUS,
-  CIRCLE_FILL_OPACITY,
-  CIRCLE_BORDER_WEIGHT,
-  CIRCLE_RIM_DARKEN,
-} from "../../config/constants/circles";
 
 export interface CircleFeature {
   geometry?: { x: number; y: number };
@@ -25,21 +17,18 @@ export class CircleLayer {
     this.layer = L.featureGroup();
 
     const renderer = L.canvas({
-      padding: CANVAS_RENDERER_PADDING,
-      tolerance: CANVAS_RENDERER_TOLERANCE,
+      padding: MAP_CONFIG.renderer.canvasPadding,
+      tolerance: MAP_CONFIG.renderer.canvasTolerance,
       pane: "circlePane",
     });
 
-    const {
-      radius = CIRCLE_RADIUS,
-      fillOpacity = CIRCLE_FILL_OPACITY,
-      weight = CIRCLE_BORDER_WEIGHT,
-      rimDarken = CIRCLE_RIM_DARKEN,
-    } = CIRCLE_CONFIG?.style ?? {};
+    const { radius, fillOpacity, weight, rimDarken } =
+      CIRCLE_CONFIG.style;
 
     for (const f of features) {
-      if (f.geometry?.x == null || f.geometry?.y == null || !f.attributes)
+      if (f.geometry?.x == null || f.geometry?.y == null || !f.attributes) {
         continue;
+      }
 
       const baseColor = colorMap[f.attributes.Description] ?? fallback;
 
